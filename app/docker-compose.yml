@@ -1,0 +1,9 @@
+version: '3.9'
+
+services:
+  hello-world:
+    image: ${CI_REGISTRY_IMAGE}:latest
+    container_name: hello-world
+    restart: always
+    ports:
+      - "5000:5000"
