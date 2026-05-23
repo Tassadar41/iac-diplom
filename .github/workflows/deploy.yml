@@ -63,6 +63,7 @@ jobs:
 
   deploy:
     needs: build-and-push
+    if: ${{ vars.DEPLOY == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
