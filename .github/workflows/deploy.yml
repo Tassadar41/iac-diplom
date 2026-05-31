@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
 
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,7 +29,6 @@ jobs:
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
@@ -38,15 +37,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 🔥 FIX: lowercase + safer image name
-      - name: Set image name
+      - name: Set image tag
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-
           echo "IMAGE_NAME=ghcr.io/$OWNER/$REPO:latest" >> $GITHUB_ENV
 
-      # 🔥 FIX: official login action (решает твою auth проблему)
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -63,34 +59,21 @@ jobs:
 
   deploy:
     needs: build-and-push
-    if: ${{ vars.DEPLOY == 'true' }}
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
-
     steps:
       - name: Set image name
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-
           echo "IMAGE_NAME=ghcr.io/$OWNER/$REPO:latest" >> $GITHUB_ENV
 
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
-          script: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            docker pull $IMAGE_NAME
-
-            docker stop hello-world || true
-            docker rm hello-world || true
-
-            docker run -d \
-              --name hello-world \
-              --restart always \
-              -p 5000:5000 \
-              $IMAGE_NAME
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/hello-world hello-world=$IMAGE_NAME
+          kubectl rollout restart deployment/hello-world
