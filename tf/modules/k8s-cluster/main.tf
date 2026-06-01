@@ -14,7 +14,7 @@ terraform {
 
 # 3 Master nodes
 resource "yandex_compute_instance" "k8s_master" {
-  count = 3
+  count = 2
   name  = "k8s-master-${count.index + 1}"
   platform_id = "standard-v3"
   zone        = var.zone

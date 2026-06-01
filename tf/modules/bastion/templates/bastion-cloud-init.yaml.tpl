@@ -94,7 +94,7 @@ write_files:
         balance roundrobin
         server master-1 ${k8s_master_1_ip}:6443 check
         server master-2 ${k8s_master_2_ip}:6443 check
-        server master-3 ${k8s_master_3_ip}:6443 check
+        
 
       frontend grafana
         bind *:3000

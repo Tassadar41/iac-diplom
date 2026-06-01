@@ -96,6 +96,7 @@ module "k8s_cluster" {
 }
 
 # Модуль дополнительной VM
+/*
 module "vm_app" {
   source = "./modules/vm-app"
   
@@ -108,3 +109,4 @@ module "vm_app" {
   
   depends_on = [module.network, module.monitoring]
 }
+*/

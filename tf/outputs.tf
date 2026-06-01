@@ -42,8 +42,9 @@ output "worker_ips" {
   description = "Kubernetes worker nodes IPs"
   value       = module.k8s_cluster.worker_local_ips
 }
-
+/*
 output "vm_app_local_ip" {
   description = "Application VM local IP"
   value       = module.vm_app.vm_app_local_ip
 }
+*/

@@ -15,7 +15,7 @@ locals {
 }
 
 data "yandex_vpc_address" "bastion_public_ip" {
-  address_id = "e9bud7h23bvuv548rkb8"
+  address_id = "e9b45paglla9b8sblds8"
   //name = "bastion-static-ip"
   /*
   name = "bastion-public-ip"
@@ -66,7 +66,7 @@ resource "yandex_compute_instance" "bastion" {
       monitoring_local_ip = var.monitoring_local_ip
       k8s_master_1_ip     = var.k8s_master_ips[0]
       k8s_master_2_ip     = var.k8s_master_ips[1]
-      k8s_master_3_ip     = var.k8s_master_ips[2]
+      //k8s_master_3_ip     = var.k8s_master_ips[2]
       influxdb_url        = "http://${var.monitoring_local_ip}:8086"
       ssh_public_key      = var.ssh_public_key
     })
@@ -83,3 +83,5 @@ resource "yandex_vpc_address" "bastion_public_ip" {
   }
 }
 */
+
+

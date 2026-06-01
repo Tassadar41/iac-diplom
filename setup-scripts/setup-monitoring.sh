@@ -1,6 +1,38 @@
 #!/bin/bash
 set -e
 
+# Ожидание освобождения блокировки dpkg с таймаутом и принудительной очисткой
+echo "Checking for dpkg lock..."
+MAX_WAIT=120  # максимальное время ожидания в секундах
+WAITED=0
+while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+    if [ $WAITED -ge $MAX_WAIT ]; then
+        echo "Timeout reached. Forcefully terminating blocking process..."
+        # Получаем PID процесса, держащего блокировку
+        PID=$(sudo fuser /var/lib/dpkg/lock-frontend 2>/dev/null | tr -d ' ')
+        if [ -n "$PID" ]; then
+            # Мягко завершаем
+            sudo kill -TERM $PID 2>/dev/null
+            sleep 3
+            # Проверяем, жив ли ещё процесс
+            if sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
+                echo "Process still alive, force killing..."
+                sudo kill -9 $PID 2>/dev/null
+                sleep 1
+            fi
+        fi
+        # Удаляем lock-файлы и донастраиваем пакеты
+        echo "Cleaning up locks and repairing dpkg..."
+        sudo rm -f /var/lib/dpkg/lock-frontend
+        sudo rm -f /var/lib/dpkg/lock
+        sudo dpkg --configure -a
+        break
+    fi
+    echo "Waiting for other dpkg process to finish... (${WAITED}s elapsed)"
+    sleep 5
+    WAITED=$((WAITED + 5))
+done
+
 echo "=== Setting up Monitoring VM ==="
 
 # Обновление системы
