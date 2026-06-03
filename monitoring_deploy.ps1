@@ -25,7 +25,8 @@ try {
 
     Write-Host "=== Copy setup-monitoring.sh to $vmIp ==="
     # Копируем ОБА файла одной командой
-    scp -i $keyPath "setup-monitoring.sh" "registries.conf" "yc-user@${vmIp}:~/"
+    scp -i $keyPath "setup-monitoring.sh" "yc-user@${vmIp}:~/"
+    scp -i $keyPath "registries.conf" "yc-user@${vmIp}:~/"
     if ($LASTEXITCODE -ne 0) {
         throw "Error copying file via scp."
     }
@@ -41,7 +42,7 @@ try {
         "sudo DEBIAN_FRONTEND=noninteractive apt-get update -o DPkg::Lock::Timeout=60",
         "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::='--force-confold' -o DPkg::Lock::Timeout=60 python3-pip",
         "sudo pip3 install podman-compose",
-        "sudo mv ~/registries.conf /etc/containers/registries.conf",
+        "sudo mv ~/registries.conf /etc/containers/",
         "sudo bash setup-monitoring.sh",
         "rm ~/setup-monitoring.sh"
     ) -join " && "

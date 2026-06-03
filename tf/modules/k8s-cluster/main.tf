@@ -12,7 +12,7 @@ terraform {
 
 
 
-# 3 Master nodes
+# 2 Master nodes
 resource "yandex_compute_instance" "k8s_master" {
   count = 2
   name  = "k8s-master-${count.index + 1}"
@@ -21,8 +21,8 @@ resource "yandex_compute_instance" "k8s_master" {
   
   resources {
     cores         = 2
-    memory        = 2
-    core_fraction = 20
+    memory        = 4
+    core_fraction = 50
   }
 
   boot_disk {

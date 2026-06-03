@@ -15,7 +15,7 @@ locals {
 }
 
 data "yandex_vpc_address" "bastion_public_ip" {
-  address_id = "e9b45paglla9b8sblds8"
+  address_id = "e9bjpfugqvu6i9oamph6"
   //name = "bastion-static-ip"
   /*
   name = "bastion-public-ip"
@@ -83,5 +83,7 @@ resource "yandex_vpc_address" "bastion_public_ip" {
   }
 }
 */
+
+
 
 
