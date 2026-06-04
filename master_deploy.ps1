@@ -15,6 +15,7 @@ try {
         $masterNum = Read-Host "Enter the master number (1, 2, 3, ...)"
     } until ($masterNum -match '^\d+$' -and [int]$masterNum -ge 1)
     $masterName = "k8s-master-$masterNum"
+    $masterUser = "master-$masterNum"
     Write-Host "Target instance: $masterName"
 
     if (-not (Get-Command "yc" -ErrorAction SilentlyContinue)) {
@@ -125,16 +126,18 @@ $clusterInfoFile = Join-Path $originalDir "cluster-info.json"
             
         ) -join " && "
         
-        # команда на удаление в случае ошибки
+        
         
         $initCommandsPart2 = @(
             "echo part_2_launch ",
             #"kubectl --kubeconfig ~/.kube/config taint node $(hostname) node-role.kubernetes.io/control-plane:NoSchedule- 2>/dev/null || true",
-            "kubectl --kubeconfig ~/.kube/config taint node master-1 node-role.kubernetes.io/control-plane:NoSchedule- 2>/dev/null || true",
+            "kubectl --kubeconfig ~/.kube/config taint node ${masterUser} node-role.kubernetes.io/control-plane:NoSchedule- 2>/dev/null || true",
             "helm upgrade --install kube-prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace",
             "kubectl --kubeconfig ~/.kube/config wait --for=condition=ready pod -l app=kube-prometheus-stack-prometheus -n monitoring --timeout=10m 2>/dev/null || true"
             "kubectl patch svc kube-prometheus-kube-prome-prometheus -n monitoring -p '{""spec"":{""type"":""NodePort""}}' || true",
-            "kubectl get svc -n monitoring -l app=kube-prometheus-stack-prometheus"
+            "kubectl get svc -n monitoring -l app=kube-prometheus-stack-prometheus",
+            "kubeadm token create --print-join-command",
+            "sudo kubeadm init phase upload-certs --upload-certs"
         ) -join " && "
         #ssh -i $keyPath "yc-user@$vmIp" $initCommands
         #if ($LASTEXITCODE -ne 0) {

@@ -42,9 +42,11 @@ try {
         "sudo DEBIAN_FRONTEND=noninteractive apt-get update -o DPkg::Lock::Timeout=60",
         "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::='--force-confold' -o DPkg::Lock::Timeout=60 python3-pip",
         "sudo pip3 install podman-compose",
+        "sudo mkdir -p /etc/containers/",
         "sudo mv ~/registries.conf /etc/containers/",
         "sudo bash setup-monitoring.sh",
-        "rm ~/setup-monitoring.sh"
+        "rm ~/setup-monitoring.sh",
+        "sudo ip route add 10.100.0.0/16 via 10.0.0.10"
     ) -join " && "
     
 
