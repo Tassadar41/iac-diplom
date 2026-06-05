@@ -69,18 +69,32 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Error copying file via SCP"
     }
+    function Invoke-Remote {
+        param([string]$Commands)
+        $sshArgs = @(
+            '-i', $sshKey,
+            '-t',   # Принудительное выделение псевдотерминала
+            '-o', 'ServerAliveInterval=60',
+            '-o', 'ServerAliveCountMax=20',
+            "yc-user@${bastionExternalIp}",
+            "export DEBIAN_FRONTEND=noninteractive; $Commands"
+        )
+        & ssh $sshArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Error executing commands on remote machine."
+            exit 1
+        }
+    }
+
+    $initCommands = @(
+                "sudo bash ~/setup-bastion.sh && rm ~/setup-bastion.sh"
+                
+            ) -join " && "
 
     # Шаг 6–8: подключаемся по SSH и запускаем скрипт, затем сессия завершается
-    Write-Host "Launching $bashScript on Bastion..."
-    $sshArgs = @(
-        '-i', $sshKey,
-        "yc-user@$bastionExternalIp",
-        'sudo bash ~/setup-bastion.sh && rm ~/setup-bastion.sh'
-    )
-    & ssh.exe @sshArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw "Error executing script on Bastion"
-    }
+    
+    Invoke-Remote $initCommands
+
     Write-Host "The script was successfully executed on Bastion."
 }
 catch {

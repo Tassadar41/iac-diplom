@@ -31,6 +31,23 @@ try {
         throw "Error copying file via scp."
     }
 
+    function Invoke-Remote {
+        param([string]$Commands)
+        $sshArgs = @(
+            '-i', $keyPath,
+            '-t',   # Принудительное выделение псевдотерминала
+            '-o', 'ServerAliveInterval=60',
+            '-o', 'ServerAliveCountMax=20',
+            "yc-user@${vmIp}",
+            "export DEBIAN_FRONTEND=noninteractive; $Commands"
+        )
+        & ssh $sshArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Error executing commands on remote machine."
+            exit 1
+        }
+    }
+
     Write-Host "=== Connecting to $vmIp and execution of commands ==="
     # Команды выполняются последовательно, при ошибке остановка.
     # Сначала обновление пакетов, затем установка python3-pip и podman-compose,
@@ -50,10 +67,7 @@ try {
     ) -join " && "
     
 
-    ssh -i $keyPath "yc-user@$vmIp" $remoteCommands
-    if ($LASTEXITCODE -ne 0) {
-        throw "Error executing commands on remote machine."
-    }
+    Invoke-Remote $remoteCommands
 
     Write-Host "=== All operations completed successfully ==="
 }
