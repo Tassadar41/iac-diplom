@@ -28,10 +28,13 @@ try {
     $master2Ip = $master2.network_interfaces[0].primary_v4_address.address
     $monitoring = yc compute instance get --name vm-monitoring --format json | ConvertFrom-Json
     $monitoringIp = $monitoring.network_interfaces[0].primary_v4_address.address
+    $worker1 = yc compute instance get --name k8s-worker-1 --format json | ConvertFrom-Json
+    $worker1Ip = $worker1.network_interfaces[0].primary_v4_address.address
 
     Write-Host "master-1: $master1Ip"
     Write-Host "master-2: $master2Ip"
     Write-Host "monitoring: $monitoringIp"
+    Write-Host "worker 1: $worker1Ip"
 
     # Шаг 4: меняем IP в файле setup-bastion.sh, сохраняя порты
     $bashScript = "setup-bastion.sh"
@@ -49,6 +52,10 @@ try {
     $content = $content -replace '(server master-1\s+)[\d.]+(:6443)', "`${1}$master1Ip`${2}"
     # Заменяем IP для master-2 (порт 6443)
     $content = $content -replace '(server master-2\s+)[\d.]+(:6443)', "`${1}$master2Ip`${2}"
+
+    # Заменяем IP для worker-1  (порт 30500)
+    $content = $content -replace '(server worker-1\s+)[\d.]+(:30500)', "`${1}$worker1Ip`${2}"
+    
 
     Set-Content -Path $bashScript -Value $content -NoNewline
 
